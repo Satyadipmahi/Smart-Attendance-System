@@ -9,32 +9,37 @@
 <body>
     <h1>Scan Face to Mark Attendance</h1>
     <video id="video" width="720" height="560" autoplay></video>
-    <button onclick="captureAndMatch()">Verify Face</button>
+    <button id="verifyBtn" onclick="captureAndMatch()">Verify Face</button>
 
     <script>
         async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-            document.getElementById("video").srcObject = stream;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                document.getElementById("video").srcObject = stream;
+            } catch (error) {
+                alert("Camera access denied! Please allow camera permissions.");
+                console.error(error);
+            }
         }
-        startCamera();
 
         async function loadModels() {
-            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+            await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+            await faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/');
+            console.log("Models Loaded");
+            document.getElementById("verifyBtn").disabled = false; // Enable button after loading
         }
-        loadModels();
 
         async function captureAndMatch() {
             const video = document.getElementById("video");
             const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
             
             if (detection) {
-                const userName = "Test User"; // Replace with actual face recognition logic
+                const userName = "Test User"; // Replace with actual matching logic
                 sendAttendanceToGoogleSheets(userName);
                 alert("Attendance Marked for " + userName);
             } else {
-                alert("Face not recognized! Please contact admin.");
+                alert("Face not recognized! Please try again.");
             }
         }
 
@@ -45,6 +50,11 @@
                 headers: { "Content-Type": "application/json" }
             }).then(response => alert("Data sent to Google Sheets!"));
         }
+
+        // Start everything
+        document.getElementById("verifyBtn").disabled = true; // Disable button until models load
+        startCamera();
+        loadModels();
     </script>
 </body>
 </html>
