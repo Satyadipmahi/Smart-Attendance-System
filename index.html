@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest"></script>
+</head>
+<body>
+    <h1>Scan Face to Mark Attendance</h1>
+    <video id="video" width="720" height="560" autoplay></video>
+    <button onclick="captureAndMatch()">Verify Face</button>
+
+    <script>
+        async function startCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            document.getElementById("video").srcObject = stream;
+        }
+        startCamera();
+
+        async function captureAndMatch() {
+            const video = document.getElementById("video");
+            const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+            
+            if (detection) {
+                sendAttendanceToGoogleSheets("User Name"); // Replace with actual matched name
+            } else {
+                alert("Face not recognized! Please contact admin.");
+            }
+        }
+
+        function sendAttendanceToGoogleSheets(name) {
+            fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+                method: "POST",
+                body: JSON.stringify({ name, date: new Date().toLocaleString() }),
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+    </script>
+</body>
+</html>
