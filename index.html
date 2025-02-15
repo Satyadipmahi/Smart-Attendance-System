@@ -18,23 +18,32 @@
         }
         startCamera();
 
+        async function loadModels() {
+            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+        }
+        loadModels();
+
         async function captureAndMatch() {
             const video = document.getElementById("video");
-            const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
             
             if (detection) {
-                sendAttendanceToGoogleSheets("User Name"); // Replace with actual matched name
+                const userName = "Test User"; // Replace with actual face recognition logic
+                sendAttendanceToGoogleSheets(userName);
+                alert("Attendance Marked for " + userName);
             } else {
                 alert("Face not recognized! Please contact admin.");
             }
         }
 
         function sendAttendanceToGoogleSheets(name) {
-            fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+            fetch("https://script.google.com/macros/s/AKfycbyRaa4U55XQPX8BFLQEwSPT2LSGl4BI8fOVCtWudYE/exec", {
                 method: "POST",
                 body: JSON.stringify({ name, date: new Date().toLocaleString() }),
                 headers: { "Content-Type": "application/json" }
-            });
+            }).then(response => alert("Data sent to Google Sheets!"));
         }
     </script>
 </body>
